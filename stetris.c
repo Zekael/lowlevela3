@@ -410,8 +410,8 @@ int main(int argc, char **argv) {
     gettimeofday(&sTv, NULL);
 
     int key = readSenseHatJoystick();
-    if (!key)
-      key = readKeyboard();
+    //if (!key)
+      //key = readKeyboard();
     if (key == KEY_ENTER)
       break;
 
