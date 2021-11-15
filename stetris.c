@@ -305,12 +305,12 @@ void renderSenseHatMatrix(bool const playfieldChanged) {
     memset(fb_mem, 0, sizeof(u_int16_t)*(width));
 
     //set colors
-    for (size_t i = 0; i < width; i++){
-      for (size_t j = 0; j < height; j++){
-        if(playfield[i][j].occupied == true){
-          *(tmp+i+(height*j)) = 0xFF00;
+    for (size_t i = 0; i < height; i++){
+      for (size_t j = 0; j < width; j++){
+        if(playfield[j][i].occupied == true){
+          *(tmp+j+(height*i)) = 0xFF00;
         }else{
-          *(tmp+i+(height*j)) = 0x0000;
+          *(tmp+j+(height*i)) = 0x0000;
         }
       }
     }
