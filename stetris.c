@@ -231,6 +231,7 @@ int readSenseHatJoystick() {
     printf("Event Code - %d\n", event.code); */
     if(event.type == EV_KEY && event.value == 2) {
       close(eb);
+      printf("Key Pressed %d \n", event.code);
       return event.code;
     }
   }
@@ -524,8 +525,18 @@ inline unsigned long uSecFromTimespec(struct timespec const ts) {
   return ((ts.tv_sec * 1000000) + (ts.tv_nsec / 1000));
 }
 
-int main(int argc, char **argv) {  
-  (void) argc;
+int main(int argc, char **argv) {
+
+  initializeSenseHat();
+
+  while (1)
+  {
+    readSenseHatJoystick();
+  }
+  
+
+}
+  /* (void) argc;
   (void) argv;
   // This sets the stdin in a special state where each
   // keyboard press is directly flushed to the stdin and additionally
@@ -593,3 +604,4 @@ int main(int argc, char **argv) {
 
   return 0;
 }
+ */
