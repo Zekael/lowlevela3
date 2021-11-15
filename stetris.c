@@ -11,10 +11,13 @@
 #include <sys/ioctl.h>
 #include <linux/fb.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 
 //definitions
-#define fb_device "/dev/fb0"
+#define fb_path "/dev/fb%d"
+#define fb_id "RPi-Sense FB"
 
 
 
@@ -72,10 +75,34 @@ gameConfig game = {
 // return false if something fails, else true
 bool initializeSenseHat() {
 
+
+  
   //variables
   struct fb_fix_screeninfo info_fixed;
 
-  int fb = open(fb_device, O_RDWR);
+  int end = 0;
+  int fb = 0;
+  int i = 0;
+  char buffer[20];
+
+  while(end==1){
+    snprintf(buffer, 20, fb_path, i);
+    int fb = open(buffer, O_RDWR);
+    if(fb == -1){
+      end = 1;
+      break;
+    }
+
+    ioctl(fb, FBIOGET_FSCREENINFO, &info_fixed);
+
+    if(strcmp(info_fixed.id, fb_id) == 0){
+      end = 1;
+      break;
+    }
+    else{
+      i++;
+    }
+  }
 
   if (fb == -1) {
     printf("Error in framebuffer device\n");
@@ -87,7 +114,7 @@ bool initializeSenseHat() {
     return false;
   }
 
-  printf("%s\n", info_fixed.id);
+  printf("id %s\n", info_fixed.id);
   printf("%d\n", info_fixed.smem_len);
   printf("%d\n", info_fixed.line_length);
   printf("%d\n", info_fixed.visual);
