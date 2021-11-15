@@ -135,6 +135,8 @@ void freeSenseHat() {
 // !!! when nothing was pressed you MUST return 0 !!!
 int readSenseHatJoystick() {
 
+  printf("reading joystick");
+
   struct input_event event;
   struct pollfd fds[1];
 
@@ -190,7 +192,7 @@ int readSenseHatJoystick() {
       i++;
     }
   }
-
+  printf("Joystick no input\n");
   return 0;
 }
 
