@@ -183,6 +183,7 @@ int readSenseHatJoystick() {
       read(fd, &event, sizeof(event));
       printf("Event Type - %d\n", event.type);
       printf("Event Value - %d\n", event.value);
+      printf("Event Code - %d\n", event.code);
       if(event.type == EV_KEY) {
         printf("Key Event actually returned\n"); 
         return event.value;
