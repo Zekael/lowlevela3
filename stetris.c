@@ -88,6 +88,9 @@ bool initializeSenseHat() {
   }
 
   printf("%s\n", info_fixed.id);
+  printf("%d\n", info_fixed.smem_len);
+  printf("%d\n", info_fixed.line_length);
+  printf("%d\n", info_fixed.visual);
   return true;
 }
 
