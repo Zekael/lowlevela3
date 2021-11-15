@@ -227,7 +227,7 @@ int readSenseHatJoystick() {
     /* printf("Event Type - %d\n", event.type);
     printf("Event Value - %d\n", event.value);
     printf("Event Code - %d\n", event.code); */
-    if(event.type == EV_KEY && event.value == 2) {
+    if(event.type == EV_KEY && event.value == 1) {
       if (event.code == 103) {
         return KEY_UP;
       }
