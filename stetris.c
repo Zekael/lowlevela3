@@ -18,6 +18,8 @@
 //definitions
 #define fb_path "/dev/fb%d"
 #define fb_id "RPi-Sense FB"
+#define event_id_joystick "RPi-Sense FB joystick"
+#define event_path "/dev/input/event%d"
 
 
 
@@ -74,47 +76,50 @@ gameConfig game = {
 // Here you can initialize what ever you need for your task
 // return false if something fails, else true
 bool initializeSenseHat() {
-
-
-  
   //variables
   struct fb_fix_screeninfo info_fixed;
 
   int end = 0;
-  int fb = 0;
   int i = 0;
-  char buffer[20];
+  char buff[20];
 
+  //loop all versions of the fb + i
   while(end==1){
 
-    snprintf(buffer, 20, fb_path, i);
-    int fb = open(buffer, O_RDWR);
+    snprintf(buff, 20, fb_path, i);
+    int fb = open(buff, O_RDWR);
 
+    //fb not found, asuming incremntal naming this means we didnt find it so return error
     if (fb == -1) {
       printf("Error in framebuffer device not found\n");
-      return false;
+      exit(1);
     }
-
+    //error
     if(ioctl(fb, FBIOGET_VSCREENINFO, &info_fixed) == -1) {
       printf("ioctl failed\n");
-      return false;
+      exit(1);
     }
-
+    //check if matching id
     if(strcmp(info_fixed.id, fb_id) == 0){
       end = 1;
       printf("Framebuffer found\n");
       break;
     }
+    //increment
     else{
       i++;
     }
+    //just for debugging
     printf("id %s\n", info_fixed.id);
     printf("%d\n", info_fixed.smem_len);
     printf("%d\n", info_fixed.line_length);
     printf("%d\n", info_fixed.visual);
   }
-
-  
+  //found valid fb
+  printf("id %s\n", info_fixed.id);
+  printf("%d\n", info_fixed.smem_len);
+  printf("%d\n", info_fixed.line_length);
+  printf("%d\n", info_fixed.visual);
   return true;
 }
 
@@ -129,6 +134,63 @@ void freeSenseHat() {
 // and KEY_ENTER, when the the joystick is pressed
 // !!! when nothing was pressed you MUST return 0 !!!
 int readSenseHatJoystick() {
+
+  struct input_event event;
+  struct pollfd fds[1];
+
+  //variables
+  int end = 0;
+  int fd = 0;
+  int i = 0;
+  char buffer[20];
+
+  //loop all versions of the fb + i
+  while(end==1){
+
+    snprintf(buffer, 20, event_path, i);
+    fd = open(buffer, O_RDWR | O_NONBLOCK);
+
+    //eb not found, asuming incremntal naming this means we didnt find it so return error
+    if (fd == -1) {
+      printf("Error in framebuffer device not found\n");
+      exit(1);
+    }
+
+    //get name
+    char id_name[200] = "c string";
+    if(ioctl(fd, EVIOCGNAME(sizeof(id_name)), id_name) == -1) {
+      printf("ioctl failed\n");
+      exit(1);
+    }
+
+    //check if matching id
+    if(strcmp(id_name, event_id_joystick) == 0){
+      end = 1;
+      printf("Joystick found\n");
+    }else{
+      i++;
+      continue;
+    }
+     
+    fds[0].fd = fd;
+    fds[0].events = POLLIN;
+
+    poll(fds, 1, 0);
+
+    //check if event data in
+    if(fds[0].revents & POLLIN) {
+      read(fd, &event, sizeof(event));
+      if(event.type == EV_KEY) {
+        printf("Event Value - %d\n", event.value);
+        return event.value;
+      }
+    }
+    //increment
+    else{
+      i++;
+    }
+  }
+
   return 0;
 }
 
