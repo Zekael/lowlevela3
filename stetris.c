@@ -152,7 +152,7 @@ int readSenseHatJoystick() {
     snprintf(buffer, 20, event_path, i);
     fd = open(buffer, O_RDWR | O_NONBLOCK);
 
-    //eb not found, asuming incremntal naming this means we didnt find it so return error
+    //fd not found, asuming incremntal naming this means we didnt find it so return error
     if (fd == -1) {
       printf("Error in framebuffer device not found\n");
       exit(1);
@@ -170,6 +170,7 @@ int readSenseHatJoystick() {
       end = 1;
       printf("Joystick found\n");
     }else{
+      printf("id %s, did not match\n", id_name);
       i++;
       continue;
     }
