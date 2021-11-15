@@ -18,7 +18,7 @@
 //definitions
 #define fb_path "/dev/fb%d"
 #define fb_id "RPi-Sense FB"
-#define event_id_joystick "RPi-Sense FB joystick"
+#define event_id_joystick "Raspberry Pi Sense HAT Joystick"
 #define event_path "/dev/input/event%d"
 
 
