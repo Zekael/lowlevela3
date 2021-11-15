@@ -120,6 +120,8 @@ bool initializeSenseHat() {
     }
     //increment
     else{
+      printf("Framebuffer not found\n");
+      printf("%s\n left id\n", statInfo.id);
       i++;
       close(fb);
     }
