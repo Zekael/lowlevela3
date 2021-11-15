@@ -317,7 +317,7 @@ void renderSenseHatMatrix(bool const playfieldChanged) {
 
 static inline void newTile(coord const target) {
   game.playfield[target.y][target.x].occupied = true;
-  game.playfield[target.y][target.x].color = set_color((u_int16_t)rand()%0xFF, (u_int16_t)rand()%0xFF, (u_int16_t)rand()%0xFF);
+  game.playfield[target.y][target.x].color = set_color((u_int16_t)rand()%0xFFFF, (u_int16_t)rand()%0xFFFF, (u_int16_t)rand()%0xFFFF);
 }
 
 static inline void copyTile(coord const to, coord const from) {
