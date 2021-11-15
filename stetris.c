@@ -16,7 +16,7 @@
 
 
 //definitions
-#define fb_path "/dev/fb/%d"
+#define fb_path "/dev/fb%d"
 #define fb_id "RPi-Sense FB"
 //the given id didnt work so i found it manually
 #define event_id_joystick "Raspberry Pi Sense HAT Joystick" //The value the was given to me is not what i found when i checked the event id
@@ -111,8 +111,13 @@ bool initializeSenseHat() {
       end = 1;
     }
     //error
-    if(ioctl(fb, FBIOGET_VSCREENINFO, &statInfo) == -1) {
-      printf("ioctl failed\n");
+    if(ioctl(fb, FBIOGET_FSCREENINFO, &statInfo) == -1) {
+      printf("ioctl failed fixed\n");
+      success = false;
+      end = 1;
+    }
+    if(ioctl(fb, FBIOGET_VSCREENINFO, &varInfo) == -1) {
+      printf("ioctl failed var\n");
       success = false;
       end = 1;
     }
