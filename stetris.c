@@ -86,38 +86,35 @@ bool initializeSenseHat() {
   char buffer[20];
 
   while(end==1){
+
     snprintf(buffer, 20, fb_path, i);
     int fb = open(buffer, O_RDWR);
-    if(fb == -1){
-      end = 1;
-      break;
+
+    if (fb == -1) {
+      printf("Error in framebuffer device not found\n");
+      return false;
     }
 
-    ioctl(fb, FBIOGET_FSCREENINFO, &info_fixed);
+    if(ioctl(fb, FBIOGET_VSCREENINFO, &info_fixed) == -1) {
+      printf("ioctl failed\n");
+      return false;
+    }
 
     if(strcmp(info_fixed.id, fb_id) == 0){
       end = 1;
+      printf("Framebuffer found\n");
       break;
     }
     else{
       i++;
     }
+    printf("id %s\n", info_fixed.id);
+    printf("%d\n", info_fixed.smem_len);
+    printf("%d\n", info_fixed.line_length);
+    printf("%d\n", info_fixed.visual);
   }
 
-  if (fb == -1) {
-    printf("Error in framebuffer device\n");
-    return false;
-  }
-
-  if(ioctl(fb, FBIOGET_VSCREENINFO, &info_fixed) == -1) {
-    printf("ioctl failed\n");
-    return false;
-  }
-
-  printf("id %s\n", info_fixed.id);
-  printf("%d\n", info_fixed.smem_len);
-  printf("%d\n", info_fixed.line_length);
-  printf("%d\n", info_fixed.visual);
+  
   return true;
 }
 
