@@ -214,8 +214,7 @@ int readSenseHatJoystick() {
 
   memccpy(buff, initSenseHat.event_name, 0, 30);
 
-  int eb = 0;
-  eb = open(buff, O_RDWR | O_NONBLOCK);
+  int eb = initSenseHat.event_eb;
   
   fds[0].fd = eb;
   fds[0].events = POLLIN;
@@ -229,7 +228,6 @@ int readSenseHatJoystick() {
     printf("Event Value - %d\n", event.value);
     printf("Event Code - %d\n", event.code); */
     if(event.type == EV_KEY && event.value == 2) {
-      close(eb);
       if (event.code == 103) {
         return KEY_UP;
       }
@@ -250,8 +248,6 @@ int readSenseHatJoystick() {
       }
     }
   }
-  close(eb);
-
   return 0;
 }
 
