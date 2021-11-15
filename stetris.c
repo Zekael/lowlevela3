@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <sys/mman.h>
 
 
 //definitions
@@ -72,6 +73,7 @@ gameConfig game = {
                    .initNextGameTick = 50,
 };
 
+//storing data about frame buffer and event location
 typedef struct {
   int fb_fb;
   char* fb_name;
@@ -79,9 +81,32 @@ typedef struct {
   char* event_name;
   struct fb_var_screeninfo vinfo;
   struct fb_fix_screeninfo finfo;
+  char* fb_mem;
 } initializeSenseHatVals;
 
-initializeSenseHatVals initSenseHat = {.fb_fb = -1, .event_eb = -1, .vinfo = {0}, .finfo = {0}, .event_name = NULL, .fb_name = NULL};
+initializeSenseHatVals initSenseHat = {.fb_fb = -1, .event_eb = -1, .vinfo = {0}, .finfo = {0}, .event_name = NULL, .fb_name = NULL, .fb_mem = NULL};
+
+typedef struct {
+  uint16_t color;
+} color_tile;
+
+color_tile set_color(uint16_t r, uint16_t g, uint16_t b) {
+
+  color_tile color {0};
+
+  //shift so the lower bits are in the right spot
+  r = r << 11;
+  g = g << 5;
+  //and with a "mask"
+  uint16_t green_cut = g & 0xF800;
+  uint16_t red_cut = r & 0x07E0;
+  uint16_t blue_cut = b & 0x001F;
+
+  color.color = color + red_cut;
+  color.color = color + green_cut;
+  color.color = color + blue_cut;
+  return color;
+}
 
 // This function is called on the start of your application
 // Here you can initialize what ever you need for your task
@@ -110,12 +135,13 @@ bool initializeSenseHat() {
       success = false;
       end = 1;
     }
-    //error
+    //read fixed screen data
     if(ioctl(fb, FBIOGET_FSCREENINFO, &statInfo) == -1) {
       printf("ioctl failed fixed\n");
       success = false;
       end = 1;
     }
+    //read variable screen data
     if(ioctl(fb, FBIOGET_VSCREENINFO, &varInfo) == -1) {
       printf("ioctl failed var\n");
       success = false;
@@ -136,11 +162,20 @@ bool initializeSenseHat() {
     }
   }
 
+  //store values
   initSenseHat.fb_fb = fb;
   initSenseHat.finfo = statInfo;
   initSenseHat.vinfo = varInfo;
   initSenseHat.fb_name = malloc(sizeof(char)*30);
   memccpy(initSenseHat.fb_name, buff, 0, 30);
+  //map framebuffer
+  void* fb_mem = mmap(NULL, statInfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0);
+  initSenseHat.fb_mem = fb_mem;
+
+  if(fb_mem == (void *)-1){
+    printf("Error in mmap\n");
+    success = false;
+  }
 
   //found valid fb
   printf("id %s\n", statInfo.id);
@@ -188,6 +223,7 @@ bool initializeSenseHat() {
     }
   }
 
+  //store values
   initSenseHat.event_eb = eb;
   initSenseHat.event_name = malloc(sizeof(char)*30);
   memccpy(initSenseHat.event_name, buffer, 0, 30);
@@ -200,6 +236,9 @@ bool initializeSenseHat() {
 void freeSenseHat() {
   free(initSenseHat.event_name);
   free(initSenseHat.fb_name);
+  close(initSenseHat.fb_fb);
+  close(initSenseHat.event_eb);
+  munmap(initSenseHat.fb_mem, initSenseHat.finfo.smem_len);
 }
 
 // This function should return the key that corresponds to the joystick press
@@ -211,9 +250,6 @@ int readSenseHatJoystick() {
   struct input_event event;
   struct pollfd fds[1];
   char buff[30];
-
-  memccpy(buff, initSenseHat.event_name, 0, 30);
-
   int eb = initSenseHat.event_eb;
   
   fds[0].fd = eb;
@@ -227,7 +263,7 @@ int readSenseHatJoystick() {
     /* printf("Event Type - %d\n", event.type);
     printf("Event Value - %d\n", event.value);
     printf("Event Code - %d\n", event.code); */
-    if(event.type == EV_KEY && event.value == 1) {
+    if(event.type == EV_KEY && event.value == 1 || event.value == 2) {
       if (event.code == 103) {
         return KEY_UP;
       }
@@ -256,7 +292,30 @@ int readSenseHatJoystick() {
 // every game tick. The parameter playfieldChanged signals whether the game logic
 // has changed the playfield
 void renderSenseHatMatrix(bool const playfieldChanged) {
-  (void) playfieldChanged;
+  if(playfieldChanged){
+    //variables
+    int fb = initSenseHat.fb_fb;
+    void* fb_mem = initSenseHat.fb_mem;
+    uint16_t** color_field = (uint16_t**)fb_mem;
+    tile** playfield = game.playfield;
+    
+    int width = game.grid.x;
+    int height = game.height.y;
+
+    for (size_t i = 0; i < width; i++)
+    {
+      for (size_t j = 0; j < height; j++)
+      {
+        
+        bool occupied = playfield[i][j];
+        if(occupied){
+          color_field[i][j] = 0xFFFF;
+        }else{
+          color_field[i][j] = 0x0000;
+        }
+      }
+    }
+  }
 }
 
 
