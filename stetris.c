@@ -321,19 +321,19 @@ static inline void newTile(coord const target) {
 }
 
 static inline void copyTile(coord const to, coord const from) {
-  memcpy((void *) &game.playfield[to.y][to.x], (void *) &game.playfield[from.y][from.x], sizeof(tile)+sizeof(u_int16_t));
+  memcpy((void *) &game.playfield[to.y][to.x], (void *) &game.playfield[from.y][from.x], sizeof(tile));
 }
 
 static inline void copyRow(unsigned int const to, unsigned int const from) {
-  memcpy((void *) &game.playfield[to][0], (void *) &game.playfield[from][0], (sizeof(tile)*sizeof(u_int16_t)) * game.grid.x);
+  memcpy((void *) &game.playfield[to][0], (void *) &game.playfield[from][0], sizeof(tile) * game.grid.x);
 }
 
 static inline void resetTile(coord const target) {
-  memset((void *) &game.playfield[target.y][target.x], 0, sizeof(tile)*sizeof(u_int16_t));
+  memset((void *) &game.playfield[target.y][target.x], 0, sizeof(tile));
 }
 
 static inline void resetRow(unsigned int const target) {
-  memset((void *) &game.playfield[target][0], 0, sizeof(tile)*sizeof(u_int16_t) * game.grid.x);
+  memset((void *) &game.playfield[target][0], 0, sizeof(tile) * game.grid.x);
 }
 
 static inline bool tileOccupied(coord const target) {
