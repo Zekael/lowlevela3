@@ -18,7 +18,8 @@
 //definitions
 #define fb_path "/dev/fb%d"
 #define fb_id "RPi-Sense FB"
-#define event_id_joystick "Raspberry Pi Sense HAT Joystick"
+//the given id didnt work so i found it manually
+#define event_id_joystick "Raspberry Pi Sense HAT Joystick" //The value the was given to me is not what i found when i checked the event id
 #define event_path "/dev/input/event%d"
 
 
@@ -71,36 +72,48 @@ gameConfig game = {
                    .initNextGameTick = 50,
 };
 
+typedef struct {
+  int fb_fb;
+  char* fb_name;
+  int event_eb;
+  char* event_name;
+  struct fb_var_screeninfo vinfo;
+  struct fb_fix_screeninfo finfo;
+} initializeSenseHatVals;
+
+initializeSenseHatVals initSenseHat = {.fb_fb = -1, .event_eb = -1, .vinfo = {0}, .finfo = {0}, .event_name = NULL, .fb_name = NULL};
 
 // This function is called on the start of your application
 // Here you can initialize what ever you need for your task
 // return false if something fails, else true
 bool initializeSenseHat() {
   //variables
-  struct fb_fix_screeninfo info_fixed;
+  struct fb_fix_screeninfo statInfo;
+  struct fb_var_screeninfo varInfo;
 
   int end = 0;
   int i = 0;
-  char buff[20];
+  int fb = 0;
+  char buff[30];
 
   //loop all versions of the fb + i
-  while(end==1){
+  while(end!=1){
 
-    snprintf(buff, 20, fb_path, i);
-    int fb = open(buff, O_RDWR);
+    snprintf(buff, 30, fb_path, i);
+    fb = open(buff, O_RDWR);
 
     //fb not found, asuming incremntal naming this means we didnt find it so return error
     if (fb == -1) {
       printf("Error in framebuffer device not found\n");
-      exit(1);
+      return false;
     }
     //error
-    if(ioctl(fb, FBIOGET_VSCREENINFO, &info_fixed) == -1) {
+    if(ioctl(fb, FBIOGET_VSCREENINFO, &statInfo) == -1) {
       printf("ioctl failed\n");
-      exit(1);
+      return false;
     }
     //check if matching id
-    if(strcmp(info_fixed.id, fb_id) == 0){
+    if(strcmp(statInfo.id, fb_id) == 0){
       end = 1;
       printf("Framebuffer found\n");
       break;
@@ -108,18 +121,63 @@ bool initializeSenseHat() {
     //increment
     else{
       i++;
+      close(fb);
     }
-    //just for debugging
-    printf("id %s\n", info_fixed.id);
-    printf("%d\n", info_fixed.smem_len);
-    printf("%d\n", info_fixed.line_length);
-    printf("%d\n", info_fixed.visual);
   }
+
+  initSenseHat.fb_fb = fb;
+  initSenseHat.finfo = statInfo;
+  initSenseHat.vinfo = varInfo;
+  initSenseHat.fb_name = buff;
+
   //found valid fb
-  printf("id %s\n", info_fixed.id);
-  printf("%d\n", info_fixed.smem_len);
-  printf("%d\n", info_fixed.line_length);
-  printf("%d\n", info_fixed.visual);
+  printf("id %s\n", statInfo.id);
+
+
+  //find event device
+  struct input_event event;
+  struct pollfd fds[1];
+
+  //variables
+  end = 0;
+  int eb = 0;
+  i = 0;
+  char buffer[20];
+
+  //loop all versions of the fb + i
+  while(end!=1){
+
+    snprintf(buffer, 20, event_path, i);
+    eb = open(buffer, O_RDWR | O_NONBLOCK);
+
+    //fd not found, asuming incremntal naming this means we didnt find it so return error
+    if (eb == -1) {
+      printf("Error in framebuffer device not found\n");
+      return false;
+    }
+
+    //get name
+    char id_name[200] = "c string";
+    if(ioctl(eb, EVIOCGNAME(sizeof(id_name)), id_name) == -1) {
+      printf("ioctl failed\n");
+      return false;
+    }
+
+    //check if matching id
+    if(strcmp(id_name, event_id_joystick) == 0){
+      end = 1;
+    }else{
+      //printf("id %s, did not match\n", id_name);
+      close(eb);
+      i++;
+      continue;
+    }
+  }
+
+  initSenseHat.event_eb = eb;
+  initSenseHat.event_name = buffer;
+  close(eb);
+
   return true;
 }
 
@@ -138,64 +196,27 @@ int readSenseHatJoystick() {
   struct input_event event;
   struct pollfd fds[1];
 
-  //variables
-  int end = 0;
-  int fd = 0;
-  int i = 0;
-  char buffer[20];
-
-  //loop all versions of the fb + i
-  while(end!=1){
-
-    snprintf(buffer, 20, event_path, i);
-    fd = open(buffer, O_RDWR | O_NONBLOCK);
-
-    //fd not found, asuming incremntal naming this means we didnt find it so return error
-    if (fd == -1) {
-      printf("Error in framebuffer device not found\n");
-      exit(1);
-    }
-
-    //get name
-    char id_name[200] = "c string";
-    if(ioctl(fd, EVIOCGNAME(sizeof(id_name)), id_name) == -1) {
-      printf("ioctl failed\n");
-      exit(1);
-    }
-
-    //check if matching id
-    if(strcmp(id_name, event_id_joystick) == 0){
-      end = 1;
-      //printf("Joystick found\n");
-    }else{
-      printf("id %s, did not match\n", id_name);
-      i++;
-      continue;
-    }
-     
-    fds[0].fd = fd;
-    fds[0].events = POLLIN;
-
-    poll(fds, 1, 20);
-
-    //check if event data in
-    if(fds[0].revents & POLLIN) {
-      read(fd, &event, sizeof(event));
-      printf("Event Type - %d\n", event.type);
-      printf("Event Value - %d\n", event.value);
-      printf("Event Code - %d\n", event.code);
-      if(event.type == EV_KEY) {
-        printf("Key Event actually returned\n"); 
-        return event.value;
-      }
-    }
-    //increment
-    else{
-      i++;
-    }
-    close(fd);
-  }
+  int eb = 0;
+  eb = open(initSenseHat.event_name, O_RDWR | O_NONBLOCK);
   
+  fds[0].fd = eb;
+  fds[0].events = POLLIN;
+
+  poll(fds, 1, 20);
+
+  //check if event data in
+  if(fds[0].revents & POLLIN) {
+    read(eb, &event, sizeof(event));
+    /* printf("Event Type - %d\n", event.type);
+    printf("Event Value - %d\n", event.value);
+    printf("Event Code - %d\n", event.code); */
+    if(event.type == EV_KEY && event.value == 2) {
+      close(eb);
+      return event.code;
+    }
+  }
+  close(eb);
+
   return 0;
 }
 
@@ -490,7 +511,8 @@ int main(int argc, char **argv) {
 
   while (1)
   {
-    readSenseHatJoystick();
+    int gotten = readSenseHatJoystick();
+    printf("%d\n", gotten);
   }
 
 }
