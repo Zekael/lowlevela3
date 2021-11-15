@@ -307,7 +307,7 @@ void renderSenseHatMatrix(bool const playfieldChanged) {
     //set colors
     for (size_t i = 0; i < height; i++){
       for (size_t j = 0; j < width; j++){
-        if(playfield[j][i].occupied == true){
+        if(playfield[i][j].occupied == true){
           *(tmp+j+(height*i)) = 0xFF00;
         }else{
           *(tmp+j+(height*i)) = 0x0000;
