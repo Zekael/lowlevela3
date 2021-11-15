@@ -16,7 +16,7 @@
 
 
 //definitions
-#define fb_path "/dev/fb%d"
+#define fb_path "/dev/fb/%d"
 #define fb_id "RPi-Sense FB"
 //the given id didnt work so i found it manually
 #define event_id_joystick "Raspberry Pi Sense HAT Joystick" //The value the was given to me is not what i found when i checked the event id
@@ -115,7 +115,7 @@ bool initializeSenseHat() {
     //check if matching id
     if(strcmp(statInfo.id, fb_id) == 0){
       end = 1;
-      printf("Framebuffer found\n");
+      printf("Framebuffer found, %s\n",statInfo.id);
       break;
     }
     //increment
