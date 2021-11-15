@@ -87,25 +87,25 @@ typedef struct {
 initializeSenseHatVals initSenseHat = {.fb_fb = -1, .event_eb = -1, .vinfo = {0}, .finfo = {0}, .event_name = NULL, .fb_name = NULL, .fb_mem = NULL};
 
 typedef struct {
-  uint16_t color;
+  u_int16_t color;
 } color_tile;
 
-color_tile set_color(uint16_t r, uint16_t g, uint16_t b) {
+color_tile set_color(u_int16_t r, u_int16_t g, u_int16_t b) {
 
-  color_tile color {0};
+  color_tile colorTile = {.color = 0};
 
   //shift so the lower bits are in the right spot
   r = r << 11;
   g = g << 5;
   //and with a "mask"
-  uint16_t green_cut = g & 0xF800;
-  uint16_t red_cut = r & 0x07E0;
-  uint16_t blue_cut = b & 0x001F;
+  u_int16_t green_cut = g & 0xF800;
+  u_int16_t red_cut = r & 0x07E0;
+  u_int16_t blue_cut = b & 0x001F;
 
-  color.color = color + red_cut;
-  color.color = color + green_cut;
-  color.color = color + blue_cut;
-  return color;
+  colorTile.color = colorTile.color + red_cut;
+  colorTile.color = colorTile.color + green_cut;
+  colorTile.color = colorTile.color + blue_cut;
+  return colorTile;
 }
 
 // This function is called on the start of your application
@@ -296,22 +296,22 @@ void renderSenseHatMatrix(bool const playfieldChanged) {
     //variables
     int fb = initSenseHat.fb_fb;
     void* fb_mem = initSenseHat.fb_mem;
-    uint16_t** color_field = (uint16_t**)fb_mem;
+    u_int16_t** color_field = (u_int16_t**)fb_mem;
     tile** playfield = game.playfield;
     
     int width = game.grid.x;
-    int height = game.height.y;
+    int height = game.grid.y;
 
     for (size_t i = 0; i < width; i++)
     {
       for (size_t j = 0; j < height; j++)
       {
         
-        bool occupied = playfield[i][j];
+        bool occupied = playfield[i][j].occupied;
         if(occupied){
-          color_field[i][j] = 0xFFFF;
+          color_field[i][j] = set_color(10, 10, 10).color;
         }else{
-          color_field[i][j] = 0x0000;
+          color_field[i][j] = set_color(0, 0, 0).color;
         }
       }
     }
