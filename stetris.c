@@ -480,7 +480,17 @@ inline unsigned long uSecFromTimespec(struct timespec const ts) {
 }
 
 int main(int argc, char **argv) {
-  (void) argc;
+
+  initializeSenseHat();
+
+  while (1)
+  {
+    readSenseHatJoystick();
+  }
+
+}
+
+  /* (void) argc;
   (void) argv;
   // This sets the stdin in a special state where each
   // keyboard press is directly flushed to the stdin and additionally
@@ -548,3 +558,4 @@ int main(int argc, char **argv) {
 
   return 0;
 }
+ */
