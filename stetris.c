@@ -135,7 +135,7 @@ void freeSenseHat() {
 // !!! when nothing was pressed you MUST return 0 !!!
 int readSenseHatJoystick() {
 
-  printf("reading joystick");
+  printf("reading joystick\n");
 
   struct input_event event;
   struct pollfd fds[1];
@@ -147,7 +147,7 @@ int readSenseHatJoystick() {
   char buffer[20];
 
   //loop all versions of the fb + i
-  while(end==1){
+  while(end!=1){
 
     snprintf(buffer, 20, event_path, i);
     fd = open(buffer, O_RDWR | O_NONBLOCK);
