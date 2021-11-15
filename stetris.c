@@ -130,7 +130,8 @@ bool initializeSenseHat() {
   initSenseHat.fb_fb = fb;
   initSenseHat.finfo = statInfo;
   initSenseHat.vinfo = varInfo;
-  initSenseHat.fb_name = buff;
+  initSenseHat.fb_name = malloc(sizeof(char)*30);
+  memccpy(initSenseHat.fb_name, buff, 0, 30);
 
   //found valid fb
   printf("id %s\n", statInfo.id);
@@ -144,12 +145,12 @@ bool initializeSenseHat() {
   end = 0;
   int eb = 0;
   i = 0;
-  char buffer[20];
+  char buffer[30];
 
   //loop all versions of the fb + i
   while(end!=1){
 
-    snprintf(buffer, 20, event_path, i);
+    snprintf(buffer, 30, event_path, i);
     eb = open(buffer, O_RDWR | O_NONBLOCK);
 
     //fd not found, asuming incremntal naming this means we didnt find it so return error
@@ -177,7 +178,8 @@ bool initializeSenseHat() {
   }
 
   initSenseHat.event_eb = eb;
-  initSenseHat.event_name = buffer;
+  initSenseHat.event_name = malloc(sizeof(char)*30);
+  memccpy(initSenseHat.event_name, buffer, 0, 30);
   close(eb);
 
   return true;
@@ -186,7 +188,8 @@ bool initializeSenseHat() {
 // This function is called when the application exits
 // Here you can free up everything that you might have opened/allocated
 void freeSenseHat() {
-
+  free(initSenseHat.event_name);
+  free(initSenseHat.fb_name);
 }
 
 // This function should return the key that corresponds to the joystick press
