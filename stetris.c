@@ -75,19 +75,18 @@ gameConfig game = {
 
 //storing data about frame buffer and event location
 typedef struct {
-  int fb_fb;
   char* fb_name;
   int event_eb;
   char* event_name;
   struct fb_var_screeninfo vinfo;
   struct fb_fix_screeninfo finfo;
-  char* fb_mem;
+  u_int16_t* fb_mem;
 } initializeSenseHatVals;
 
-initializeSenseHatVals initSenseHat = {.fb_fb = -1, .event_eb = -1, .vinfo = {0}, .finfo = {0}, .event_name = NULL, .fb_name = NULL, .fb_mem = NULL};
+initializeSenseHatVals initSenseHat = { .event_eb = -1, .vinfo = {0}, .finfo = {0}, .event_name = NULL, .fb_name = NULL, .fb_mem = NULL};
 
 typedef struct {
-  u_int16_t color;
+  u_int16_t* color;
 } color_tile;
 
 color_tile set_color(u_int16_t r, u_int16_t g, u_int16_t b) {
@@ -102,9 +101,9 @@ color_tile set_color(u_int16_t r, u_int16_t g, u_int16_t b) {
   u_int16_t red_cut = r & 0x07E0;
   u_int16_t blue_cut = b & 0x001F;
 
-  colorTile.color = colorTile.color + red_cut;
-  colorTile.color = colorTile.color + green_cut;
-  colorTile.color = colorTile.color + blue_cut;
+  u_int16_t color = green_cut | red_cut | blue_cut | 0x0000;
+
+  *colorTile.color = color;
   return colorTile;
 }
 
@@ -163,19 +162,21 @@ bool initializeSenseHat() {
   }
 
   //store values
-  initSenseHat.fb_fb = fb;
   initSenseHat.finfo = statInfo;
   initSenseHat.vinfo = varInfo;
-  initSenseHat.fb_name = malloc(sizeof(char)*30);
+  initSenseHat.fb_name = (char* )malloc(sizeof(char)*30);
   memccpy(initSenseHat.fb_name, buff, 0, 30);
+  printf("ok\n");
   //map framebuffer
-  void* fb_mem = mmap(NULL, statInfo.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0);
-  initSenseHat.fb_mem = fb_mem;
-
-  if(fb_mem == (void *)-1){
+  void* mappedmem = mmap(NULL, sizeof(u_int16_t)*game.grid.x*game.grid.y, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0);
+  if(mappedmem == MAP_FAILED) {
     printf("Error in mmap\n");
     success = false;
   }
+  initSenseHat.fb_mem = (u_int16_t*)mappedmem;
+  close(fb);
+
+  
 
   //found valid fb
   printf("id %s\n", statInfo.id);
@@ -225,7 +226,7 @@ bool initializeSenseHat() {
 
   //store values
   initSenseHat.event_eb = eb;
-  initSenseHat.event_name = malloc(sizeof(char)*30);
+  initSenseHat.event_name = (char*) malloc(sizeof(char)*30);
   memccpy(initSenseHat.event_name, buffer, 0, 30);
 
   return true;
@@ -236,7 +237,6 @@ bool initializeSenseHat() {
 void freeSenseHat() {
   free(initSenseHat.event_name);
   free(initSenseHat.fb_name);
-  close(initSenseHat.fb_fb);
   close(initSenseHat.event_eb);
   munmap(initSenseHat.fb_mem, initSenseHat.finfo.smem_len);
 }
@@ -294,27 +294,23 @@ int readSenseHatJoystick() {
 void renderSenseHatMatrix(bool const playfieldChanged) {
   if(playfieldChanged){
     //variables
-    int fb = initSenseHat.fb_fb;
-    void* fb_mem = initSenseHat.fb_mem;
-    u_int16_t** color_field = (u_int16_t**)fb_mem;
+    u_int16_t* fb_mem = initSenseHat.fb_mem;
+    u_int16_t* tmp = fb_mem;
     tile** playfield = game.playfield;
-    
+
     int width = game.grid.x;
     int height = game.grid.y;
 
-    for (size_t i = 0; i < width; i++)
+    u_int16_t* colors = (u_int16_t*)malloc(sizeof(u_int16_t)*(width*height));
+    
+    //memset(fb_mem, 0, sizeof(u_int16_t)*(width));
+
+    for (size_t i = 0; i < width*height; i++)
     {
-      for (size_t j = 0; j < height; j++)
-      {
-        
-        bool occupied = playfield[i][j].occupied;
-        if(occupied){
-          color_field[i][j] = set_color(10, 10, 10).color;
-        }else{
-          color_field[i][j] = set_color(0, 0, 0).color;
-        }
-      }
+      *(tmp+i) = 0xFF00;
     }
+
+    free(colors);
   }
 }
 
@@ -596,17 +592,6 @@ inline unsigned long uSecFromTimespec(struct timespec const ts) {
 }
 
 int main(int argc, char **argv) {
-
-  /* initializeSenseHat();
-
-  while (1)
-  {
-    int received = readSenseHatJoystick();
-    printf("%d\n", received);
-  }
-  
-
-} */
   (void) argc;
   (void) argv;
   // This sets the stdin in a special state where each
@@ -643,7 +628,7 @@ int main(int argc, char **argv) {
 
   // Clear console, render first time
   fprintf(stdout, "\033[H\033[J");
-  renderConsole(true);
+  renderConsole(false);
   renderSenseHatMatrix(true);
 
   while (true) {
