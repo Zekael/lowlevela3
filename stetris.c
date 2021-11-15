@@ -178,7 +178,7 @@ int readSenseHatJoystick() {
     fds[0].fd = fd;
     fds[0].events = POLLIN;
 
-    poll(fds, 1, 0);
+    poll(fds, 1, 20);
 
     //check if event data in
     if(fds[0].revents & POLLIN) {
@@ -186,12 +186,15 @@ int readSenseHatJoystick() {
       if(event.type == EV_KEY) {
         printf("Event Value - %d\n", event.value);
         return event.value;
+      }else{
+        printf("Event Type - %d\n", event.type);
       }
     }
     //increment
     else{
       i++;
     }
+    close(fd);
   }
   printf("Joystick no input\n");
   return 0;
