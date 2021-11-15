@@ -12,7 +12,6 @@
 #include <linux/fb.h>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <dirent.h>
 #include <sys/mman.h>
 
 
