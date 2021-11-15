@@ -21,7 +21,7 @@
 //the given id didnt work so i found it manually
 #define event_id_joystick "Raspberry Pi Sense HAT Joystick" //The value the was given to me is not what i found when i checked the event id
 #define event_path "/dev/input/event%d"
-
+#define poll_timeout 1
 
 
 // The game state can be used to detect what happens on the playfield
@@ -221,7 +221,7 @@ int readSenseHatJoystick() {
   fds[0].fd = eb;
   fds[0].events = POLLIN;
 
-  poll(fds, 1, 20);
+  poll(fds, 1, poll_timeout);
 
   //check if event data in
   if(fds[0].revents & POLLIN) {
@@ -524,19 +524,8 @@ inline unsigned long uSecFromTimespec(struct timespec const ts) {
   return ((ts.tv_sec * 1000000) + (ts.tv_nsec / 1000));
 }
 
-int main(int argc, char **argv) {
-
-  initializeSenseHat();
-
-  while (1)
-  {
-    int gotten = readSenseHatJoystick();
-    printf("%d\n", gotten);
-  }
-
-}
-
-  /* (void) argc;
+int main(int argc, char **argv) {  
+  (void) argc;
   (void) argv;
   // This sets the stdin in a special state where each
   // keyboard press is directly flushed to the stdin and additionally
@@ -604,4 +593,3 @@ int main(int argc, char **argv) {
 
   return 0;
 }
- */
