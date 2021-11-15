@@ -91,6 +91,8 @@ bool initializeSenseHat() {
   struct fb_fix_screeninfo statInfo;
   struct fb_var_screeninfo varInfo;
 
+  bool success = true;
+
   int end = 0;
   int i = 0;
   int fb = 0;
@@ -105,12 +107,14 @@ bool initializeSenseHat() {
     //fb not found, asuming incremntal naming this means we didnt find it so return error
     if (fb == -1) {
       printf("Error in framebuffer device not found\n");
-      return false;
+      success = false;
+      end = 1;
     }
     //error
     if(ioctl(fb, FBIOGET_VSCREENINFO, &statInfo) == -1) {
       printf("ioctl failed\n");
-      return false;
+      success = false;
+      end = 1;
     }
     //check if matching id
     if(strcmp(statInfo.id, fb_id) == 0){
@@ -156,14 +160,16 @@ bool initializeSenseHat() {
     //fd not found, asuming incremntal naming this means we didnt find it so return error
     if (eb == -1) {
       printf("Error in framebuffer device not found\n");
-      return false;
+      success = false;
+      end = 1;
     }
 
     //get name
     char id_name[200] = "c string";
     if(ioctl(eb, EVIOCGNAME(sizeof(id_name)), id_name) == -1) {
       printf("ioctl failed\n");
-      return false;
+      success = false;
+      end = 1;
     }
 
     //check if matching id
