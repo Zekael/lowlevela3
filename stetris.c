@@ -197,9 +197,12 @@ int readSenseHatJoystick() {
 
   struct input_event event;
   struct pollfd fds[1];
+  char buff[30];
+
+  memccpy(buff, initSenseHat.event_name, 0, 30);
 
   int eb = 0;
-  eb = open(initSenseHat.event_name, O_RDWR | O_NONBLOCK);
+  eb = open(buff, O_RDWR | O_NONBLOCK);
   
   fds[0].fd = eb;
   fds[0].events = POLLIN;
