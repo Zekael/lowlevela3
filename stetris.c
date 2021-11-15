@@ -135,8 +135,6 @@ void freeSenseHat() {
 // !!! when nothing was pressed you MUST return 0 !!!
 int readSenseHatJoystick() {
 
-  printf("reading joystick\n");
-
   struct input_event event;
   struct pollfd fds[1];
 
@@ -183,11 +181,11 @@ int readSenseHatJoystick() {
     //check if event data in
     if(fds[0].revents & POLLIN) {
       read(fd, &event, sizeof(event));
+      printf("Event Type - %d\n", event.type);
+      printf("Event Value - %d\n", event.value);
       if(event.type == EV_KEY) {
-        printf("Event Value - %d\n", event.value);
+        printf("Key Event actually returned\n"); 
         return event.value;
-      }else{
-        printf("Event Type - %d\n", event.type);
       }
     }
     //increment
@@ -196,7 +194,7 @@ int readSenseHatJoystick() {
     }
     close(fd);
   }
-  printf("Joystick no input\n");
+  
   return 0;
 }
 
@@ -491,7 +489,6 @@ int main(int argc, char **argv) {
 
   while (1)
   {
-    printf("in loop\n");
     readSenseHatJoystick();
   }
 
