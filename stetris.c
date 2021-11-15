@@ -8,6 +8,14 @@
 #include <string.h>
 #include <time.h>
 #include <poll.h>
+#include <sys/ioctl.h>
+#include <linux/fb.h>
+#include <fcntl.h>
+
+
+//definitions
+#define fb_device "/dev/fb1"
+
 
 
 // The game state can be used to detect what happens on the playfield
@@ -63,6 +71,23 @@ gameConfig game = {
 // Here you can initialize what ever you need for your task
 // return false if something fails, else true
 bool initializeSenseHat() {
+
+  //variables
+  struct fb_fix_screeninfo info_fixed;
+
+  int fb = open(fb_device, O_RDWR);
+
+  if (fb == -1) {
+    printf("Error in framebuffer device\n");
+    return false;
+  }
+
+  if(ioctl(fb, FBIOGET_VSCREENINFO, &info_fixed) == -1) {
+    printf("ioctl failed\n");
+    return false;
+  }
+
+  printf("%s\n", info_fixed.id);
   return true;
 }
 
