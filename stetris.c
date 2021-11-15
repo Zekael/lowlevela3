@@ -87,7 +87,16 @@ typedef struct {
 initializeSenseHatVals initSenseHat = { .event_eb = -1, .vinfo = {0}, .finfo = {0}, .event_name = NULL, .fb_name = NULL, .fb_mem = NULL};
 
 
-u_int16_t set_color(u_int16_t r, u_int16_t g, u_int16_t b) {
+u_int16_t set_color() {
+
+  u_int16_t r = rand() % 256;
+  u_int16_t g = rand() % 256;
+  u_int16_t b = rand() % 256;
+
+  r += 8;
+  g += 8;
+  b += 8;
+
   //shift so the lower bits are in the right spot
   r = r << 11;
   g = g << 5;
@@ -317,7 +326,7 @@ void renderSenseHatMatrix(bool const playfieldChanged) {
 
 static inline void newTile(coord const target) {
   game.playfield[target.y][target.x].occupied = true;
-  game.playfield[target.y][target.x].color = set_color((u_int16_t)rand()%0xFFFF, (u_int16_t)rand()%0xFFFF, (u_int16_t)rand()%0xFFFF);
+  game.playfield[target.y][target.x].color = set_color();
 }
 
 static inline void copyTile(coord const to, coord const from) {
