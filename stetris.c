@@ -35,6 +35,7 @@
 // the game logic allocate/deallocate and reset the memory
 typedef struct {
   bool occupied;
+  u_int16_t color;
 } tile;
 
 typedef struct {
@@ -85,26 +86,18 @@ typedef struct {
 
 initializeSenseHatVals initSenseHat = { .event_eb = -1, .vinfo = {0}, .finfo = {0}, .event_name = NULL, .fb_name = NULL, .fb_mem = NULL};
 
-typedef struct {
-  u_int16_t* color;
-} color_tile;
 
-color_tile set_color(u_int16_t r, u_int16_t g, u_int16_t b) {
-
-  color_tile colorTile = {.color = 0};
-
+u_int16_t set_color(u_int16_t r, u_int16_t g, u_int16_t b) {
   //shift so the lower bits are in the right spot
   r = r << 11;
   g = g << 5;
   //and with a "mask"
+  //first 5 for red, middle 6 green, lower 5 blue
   u_int16_t green_cut = g & 0xF800;
   u_int16_t red_cut = r & 0x07E0;
   u_int16_t blue_cut = b & 0x001F;
-
-  u_int16_t color = green_cut | red_cut | blue_cut | 0x0000;
-
-  *colorTile.color = color;
-  return colorTile;
+  u_int16_t col = green_cut | red_cut | blue_cut | 0x0000;
+  return col;
 }
 
 // This function is called on the start of your application
@@ -166,7 +159,7 @@ bool initializeSenseHat() {
   initSenseHat.vinfo = varInfo;
   initSenseHat.fb_name = (char* )malloc(sizeof(char)*30);
   memccpy(initSenseHat.fb_name, buff, 0, 30);
-  printf("ok\n");
+  
   //map framebuffer
   void* mappedmem = mmap(NULL, sizeof(u_int16_t)*game.grid.x*game.grid.y, PROT_READ | PROT_WRITE, MAP_SHARED, fb, 0);
   if(mappedmem == MAP_FAILED) {
@@ -308,7 +301,7 @@ void renderSenseHatMatrix(bool const playfieldChanged) {
     for (size_t i = 0; i < height; i++){
       for (size_t j = 0; j < width; j++){
         if(playfield[i][j].occupied == true){
-          *(tmp+j+(height*i)) = 0xFF00;
+          *(tmp+j+(height*i)) = playfield[i][j].color;
         }else{
           *(tmp+j+(height*i)) = 0x0000;
         }
@@ -324,23 +317,23 @@ void renderSenseHatMatrix(bool const playfieldChanged) {
 
 static inline void newTile(coord const target) {
   game.playfield[target.y][target.x].occupied = true;
+  game.playfield[target.y][target.x].color = set_color((u_int16_t)rand()%0xFF, (u_int16_t)rand()%0xFF, (u_int16_t)rand()%0xFF);
 }
 
 static inline void copyTile(coord const to, coord const from) {
-  memcpy((void *) &game.playfield[to.y][to.x], (void *) &game.playfield[from.y][from.x], sizeof(tile));
+  memcpy((void *) &game.playfield[to.y][to.x], (void *) &game.playfield[from.y][from.x], sizeof(tile)+sizeof(u_int16_t));
 }
 
 static inline void copyRow(unsigned int const to, unsigned int const from) {
-  memcpy((void *) &game.playfield[to][0], (void *) &game.playfield[from][0], sizeof(tile) * game.grid.x);
-
+  memcpy((void *) &game.playfield[to][0], (void *) &game.playfield[from][0], (sizeof(tile)*sizeof(u_int16_t)) * game.grid.x);
 }
 
 static inline void resetTile(coord const target) {
-  memset((void *) &game.playfield[target.y][target.x], 0, sizeof(tile));
+  memset((void *) &game.playfield[target.y][target.x], 0, sizeof(tile)*sizeof(u_int16_t));
 }
 
 static inline void resetRow(unsigned int const target) {
-  memset((void *) &game.playfield[target][0], 0, sizeof(tile) * game.grid.x);
+  memset((void *) &game.playfield[target][0], 0, sizeof(tile)*sizeof(u_int16_t) * game.grid.x);
 }
 
 static inline bool tileOccupied(coord const target) {
