@@ -166,7 +166,7 @@ int readSenseHatJoystick() {
     //check if matching id
     if(strcmp(id_name, event_id_joystick) == 0){
       end = 1;
-      printf("Joystick found\n");
+      //printf("Joystick found\n");
     }else{
       printf("id %s, did not match\n", id_name);
       i++;
