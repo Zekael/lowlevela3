@@ -301,16 +301,19 @@ void renderSenseHatMatrix(bool const playfieldChanged) {
     int width = game.grid.x;
     int height = game.grid.y;
 
-    u_int16_t* colors = (u_int16_t*)malloc(sizeof(u_int16_t)*(width*height));
-    
-    //memset(fb_mem, 0, sizeof(u_int16_t)*(width));
+    //clear screen
+    memset(fb_mem, 0, sizeof(u_int16_t)*(width));
 
-    for (size_t i = 0; i < width*height; i++)
-    {
-      *(tmp+i) = 0xFF00;
+    //set colors
+    for (size_t i = 0; i < width; i++){
+      for (size_t j = 0; j < height; j++){
+        if(playfield[i][j].occupied == true){
+          *(tmp+i+(height*j)) = 0xFF00;
+        }else{
+          *(tmp+i+(height*j)) = 0x0000;
+        }
+      }
     }
-
-    free(colors);
   }
 }
 
@@ -628,7 +631,7 @@ int main(int argc, char **argv) {
 
   // Clear console, render first time
   fprintf(stdout, "\033[H\033[J");
-  renderConsole(false);
+  renderConsole(true);
   renderSenseHatMatrix(true);
 
   while (true) {
