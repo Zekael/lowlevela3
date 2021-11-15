@@ -14,7 +14,7 @@
 
 
 //definitions
-#define fb_device "/dev/fb1"
+#define fb_device "RPi-Sense FB"
 
 
 
