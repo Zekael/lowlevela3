@@ -488,7 +488,7 @@ int main(int argc, char **argv) {
 
   while (1)
   {
-    printf("in loop");
+    printf("in loop\n");
     readSenseHatJoystick();
   }
 
