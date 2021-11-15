@@ -89,24 +89,10 @@ initializeSenseHatVals initSenseHat = { .event_eb = -1, .vinfo = {0}, .finfo = {
 
 u_int16_t set_color() {
 
-  u_int16_t r = rand() % 256;
-  u_int16_t g = rand() % 256;
-  u_int16_t b = rand() % 256;
-
-  r += 8;
-  g += 8;
-  b += 8;
-
-  //shift so the lower bits are in the right spot
-  r = r << 11;
-  g = g << 5;
-  //and with a "mask"
-  //first 5 for red, middle 6 green, lower 5 blue
-  u_int16_t green_cut = g & 0xF800;
-  u_int16_t red_cut = r & 0x07E0;
-  u_int16_t blue_cut = b & 0x001F;
-  u_int16_t col = green_cut | red_cut | blue_cut | 0x0000;
-  return col;
+  u_int16_t color[16] = {0xF800, 0xffff, 0xffe0, 0x5555, 0x07ff, 0xf81f, 0x001f, 0x07e0, 0x0F30, 0x3f3f, 0x3232, 0x1231, 0xFF23, 0x00FF, 0xF00F, 0xF0F0};
+  int i = rand() % 16;
+  
+  return color[i];
 }
 
 // This function is called on the start of your application
