@@ -21,7 +21,7 @@
 //the given id didnt work so i found it manually
 #define event_id_joystick "Raspberry Pi Sense HAT Joystick" //The value the was given to me is not what i found when i checked the event id
 #define event_path "/dev/input/event%d"
-#define poll_timeout 20
+#define poll_timeout 100
 
 
 // The game state can be used to detect what happens on the playfield
@@ -191,7 +191,6 @@ bool initializeSenseHat() {
   initSenseHat.event_eb = eb;
   initSenseHat.event_name = malloc(sizeof(char)*30);
   memccpy(initSenseHat.event_name, buffer, 0, 30);
-  close(eb);
 
   return true;
 }
