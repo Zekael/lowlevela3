@@ -84,9 +84,10 @@ typedef struct {
   u_int16_t* fb_mem;
 } initializeSenseHatVals;
 
+//init
 initializeSenseHatVals initSenseHat = { .event_eb = -1, .vinfo = {0}, .finfo = {0}, .event_name = NULL, .fb_name = NULL, .fb_mem = NULL};
 
-
+//get a color from the color array
 u_int16_t set_color() {
 
   u_int16_t color[16] = {0xF800, 0xffff, 0xffe0, 0x5555, 0x07ff, 0xf81f, 0x001f, 0x07e0, 0x0F30, 0x3f3f, 0x3232, 0x1231, 0xFF23, 0x00FF, 0xF00F, 0xF0F0};
@@ -164,11 +165,8 @@ bool initializeSenseHat() {
   initSenseHat.fb_mem = (u_int16_t*)mappedmem;
   close(fb);
 
-  
-
   //found valid fb
-  printf("id %s\n", statInfo.id);
-
+  //printf("id %s\n", statInfo.id);
 
   //find event device
   struct input_event event;
@@ -226,7 +224,7 @@ void freeSenseHat() {
   free(initSenseHat.event_name);
   free(initSenseHat.fb_name);
   close(initSenseHat.event_eb);
-  munmap(initSenseHat.fb_mem, initSenseHat.finfo.smem_len);
+  munmap(initSenseHat.fb_mem, sizeof(u_int16_t)*game.grid.x*game.grid.y);
 }
 
 // This function should return the key that corresponds to the joystick press
@@ -242,10 +240,10 @@ int readSenseHatJoystick() {
   
   fds[0].fd = eb;
   fds[0].events = POLLIN;
-
+  //get event
   poll(fds, 1, poll_timeout);
 
-  //check if event data in
+  //check if event data in is good
   if(fds[0].revents & POLLIN) {
     read(eb, &event, sizeof(event));
     /* printf("Event Type - %d\n", event.type);
