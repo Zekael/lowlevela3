@@ -21,7 +21,7 @@
 //the given id didnt work so i found it manually
 #define event_id_joystick "Raspberry Pi Sense HAT Joystick" //The value the was given to me is not what i found when i checked the event id
 #define event_path "/dev/input/event%d"
-#define poll_timeout 10
+#define poll_timeout 5
 
 
 // The game state can be used to detect what happens on the playfield
@@ -231,8 +231,24 @@ int readSenseHatJoystick() {
     printf("Event Code - %d\n", event.code); */
     if(event.type == EV_KEY && event.value == 2) {
       close(eb);
-      printf("Key Pressed %d \n", event.code);
-      return event.code;
+      if (event.code == 103) {
+        return KEY_UP;
+      }
+      else if (event.code == 108) {
+        return KEY_DOWN;
+      }
+      else if (event.code == 105) {
+        return KEY_LEFT;
+      }
+      else if (event.code == 106) {
+        return KEY_RIGHT;
+      }
+      else if (event.code == 28) {
+        return KEY_ENTER;
+      }
+      else {
+        return 0;
+      }
     }
   }
   close(eb);
@@ -531,7 +547,8 @@ int main(int argc, char **argv) {
 
   while (1)
   {
-    readSenseHatJoystick();
+    int received = readSenseHatJoystick();
+    printf("%d\n", received);
   }
   
 
